@@ -43,7 +43,7 @@ namespace _9157_intercomm_matkonet
             return false;
         }
 
-        static bool CheckPWD(Node<Key> l, Node<char> pwd, int time) //my version
+        static bool CheckPWD1(Node<Key> l, Node<char> pwd, int time) //my version
         {
             while (l != null)
             {
@@ -53,6 +53,49 @@ namespace _9157_intercomm_matkonet
             }
             return false;
         }
+
+        static bool CheckPWD(Node<Key> k, Node<char> p, int t)
+        {
+            Node<char> head = p;         // store start of password
+            int sum = 0;
+            bool streak = false;
+
+            while (k != null)
+            {
+                if (p == null) // fix: check p before using it
+                {
+                    if (sum <= t)
+                        return true;     // password matched within time
+                    else
+                    {
+                        // reset on timeout
+                        sum = 0;
+                        streak = false;
+                        p = head;
+                    }
+                }
+
+                if (streak)
+                    sum += k.GetValue().GetSec();
+
+                if (p != null && k.GetValue().GetPress() == p.GetValue()) // fix: check p != null
+                {
+                    streak = true;
+                    p = p.GetNext();
+                }
+                else if (p != null && k.GetValue().GetPress() != p.GetValue()) // fix: check p != null
+                {
+                    sum = 0;
+                    streak = false;
+                    p = head;
+                }
+
+                k = k.GetNext();
+            }
+
+            return false; // no valid sequence found
+        }
+
 
 
 
@@ -108,7 +151,58 @@ namespace _9157_intercomm_matkonet
         new Key('3', 1)
             }), pwd123, timeLimit), true, "Overlapping Start");
 
+            // Test 10 - Time miscount would still pass (correct even if first sec is wrongly counted)
+            Node<char> pwd10 = BuildCharList(new char[] { '1', '5' });
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+    new Key('1', 3),
+    new Key('5', 2)
+            }), pwd10, timeLimit), true, "Time miscount: passes even if first sec wrongly counted");
+
+            // Test 11 - Time miscount causes failure (should only pass if first sec is excluded)
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+    new Key('1', 3),
+    new Key('5', 3)
+            }), pwd10, timeLimit), true, "Time miscount: fails if first sec wrongly counted");
+
+            // Test 12 - Reset after mismatch, second sequence is valid
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+    new Key('1', 1),
+    new Key('2', 1),
+    new Key('1', 1),
+    new Key('5', 1)
+            }), pwd10, timeLimit), true, "Reset after mismatch and retry");
+
+            // Test 13 - Valid password is at the very end
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+    new Key('9', 1),
+    new Key('3', 1),
+    new Key('1', 1),
+    new Key('5', 2)
+            }), pwd10, timeLimit), true, "Valid match at the very end");
+
+            // Test 14 - Correct match but time is too long
+            Node<char> pwd14 = BuildCharList(new char[] { '1', '2', '3' });
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+    new Key('1', 1),
+    new Key('2', 3),
+    new Key('3', 4)
+            }), pwd14, timeLimit), false, "Match is too slow");
+
+
+
             Console.WriteLine($"\nResult: {passed}/{total} tests passed");
+
+
         }
 
         static int RunTest(int testNumber, bool actual, bool expected, string description)
