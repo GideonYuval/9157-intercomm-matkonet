@@ -27,7 +27,7 @@ namespace _9157_intercomm_matkonet
 
     public class Program
     {
-        public static bool CheckN(Node<Key> l, Node<char> pwd)
+        public static bool CheckN(Node<Key> l, Node<char> pwd, int time)
         {
             int t = -1 * l.GetValue().GetSec();
             while (l != null && pwd != null)
@@ -39,20 +39,22 @@ namespace _9157_intercomm_matkonet
                 pwd = pwd.GetNext();
             }
             if (pwd == null)
-                return t <= 5;
+                return t <= time;
             return false;
         }
 
-        static bool CheckPWD(Node<Key> l, Node<char> pwd)
+        static bool CheckPWD(Node<Key> l, Node<char> pwd, int time) //my version
         {
             while (l != null)
             {
-                if (CheckN(l, pwd))
+                if (CheckN(l, pwd, time))
                     return true;
                 l = l.GetNext();
             }
             return false;
         }
+
+
 
 
 
@@ -65,47 +67,59 @@ namespace _9157_intercomm_matkonet
         {
             Console.WriteLine("Running test cases for CheckPWD...\n");
 
+            int passed = 0;
+            int total = 0;
+
             Node<char> pwd = BuildCharList(new char[] { '1', '5' });
+            int timeLimit = 5;
 
-            var input1 = BuildList(new Key[] { new Key('1', 1), new Key('5', 2) });
-            Console.WriteLine("Test 1 - Basic Success (expected: true): " + CheckPWD(input1, pwd));
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 1), new Key('5', 2) }), pwd, timeLimit), true, "Basic Success");
 
-            var input2 = BuildList(new Key[] { new Key('1', 2), new Key('5', 6) });
-            Console.WriteLine("Test 2 - Too Slow (expected: false): " + CheckPWD(input2, pwd));
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 2), new Key('5', 6) }), pwd, timeLimit), false, "Too Slow");
 
-            var input3 = BuildList(new Key[] { new Key('2', 1), new Key('9', 1), new Key('3', 1) });
-            Console.WriteLine("Test 3 - No Match (expected: false): " + CheckPWD(input3, pwd));
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('2', 1), new Key('9', 1), new Key('3', 1) }), pwd, timeLimit), false, "No Match");
 
-            var input4 = BuildList(new Key[] { new Key('1', 2), new Key('5', 7), new Key('1', 2), new Key('5', 2) });
-            Console.WriteLine("Test 4 - Multiple Sequences (expected: true): " + CheckPWD(input4, pwd));
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 2), new Key('5', 7), new Key('1', 2), new Key('5', 2) }), pwd, timeLimit), true, "Multiple Sequences");
 
-            var input5 = BuildList(new Key[] { new Key('1', 2), new Key('5', 2) });
-            Console.WriteLine("Test 5 - Time OK even if miscounted (expected: true): " + CheckPWD(input5, pwd));
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 2), new Key('5', 2) }), pwd, timeLimit), true, "Time OK even if miscounted");
 
-            var input6 = BuildList(new Key[] { new Key('1', 3), new Key('5', 1) });
-            Console.WriteLine("Test 6 - Also OK if miscounted (expected: true): " + CheckPWD(input6, pwd));
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 3), new Key('5', 1) }), pwd, timeLimit), true, "Also OK if miscounted");
 
-            var input7 = BuildList(new Key[] { new Key('1', 3), new Key('5', 3) });
-            Console.WriteLine("Test 7 - Should fail if first sec counted (expected: true): " + CheckPWD(input7, pwd));
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 3), new Key('5', 3) }), pwd, timeLimit), true, "Should fail if first sec counted (miscounted test)");
 
-            var input8 = BuildList(new Key[] { new Key('9', 1), new Key('3', 1), new Key('1', 2), new Key('5', 2) });
-            Console.WriteLine("Test 8 - Match at end (expected: true): " + CheckPWD(input8, pwd));
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('9', 1), new Key('3', 1), new Key('1', 2), new Key('5', 2) }), pwd, timeLimit), true, "Match at end");
 
-            // Change the password to 1→2→3 for this test
+            // Test 9 - Overlapping Start
             Node<char> pwd123 = BuildCharList(new char[] { '1', '2', '3' });
-
-            var input9 = BuildList(new Key[]
+            total++;
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
             {
-    new Key('1', 1),
-    new Key('1', 1),
-    new Key('2', 1),
-    new Key('3', 1)
-            });
+        new Key('1', 1),
+        new Key('1', 1),
+        new Key('2', 1),
+        new Key('3', 1)
+            }), pwd123, timeLimit), true, "Overlapping Start");
 
-            Console.WriteLine("Test 9 - Overlapping Start (expected: true): " + CheckPWD(input9, pwd123));
-
-
+            Console.WriteLine($"\nResult: {passed}/{total} tests passed");
         }
+
+        static int RunTest(int testNumber, bool actual, bool expected, string description)
+        {
+            string result = (actual == expected) ? "PASS" : "FAIL";
+            Console.WriteLine($"Test {testNumber} - {description}: expected {expected}, got {actual} → {result}");
+            return (actual == expected) ? 1 : 0;
+        }
+
+
+
 
         public static Node<Key> BuildList(Key[] keys)
         {
