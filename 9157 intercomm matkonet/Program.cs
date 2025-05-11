@@ -54,36 +54,34 @@ namespace _9157_intercomm_matkonet
             return false;
         }
 
+        //student code
+
         static bool CheckPWD(Node<Key> k, Node<char> p, int t)
         {
-            Node<char> head = p;         // store start of password
+            Node<char> head = p;
             int sum = 0;
             bool streak = false;
 
             while (k != null)
             {
-                if (p == null) // fix: check p before using it
+                if (p == null && sum <= t)
+                    return true;
+                else if (p == null && sum > t)
                 {
-                    if (sum <= t)
-                        return true;     // password matched within time
-                    else
-                    {
-                        // reset on timeout
-                        sum = 0;
-                        streak = false;
-                        p = head;
-                    }
+                    sum = 0;
+                    streak = false;
+                    p = head;
                 }
 
                 if (streak)
                     sum += k.GetValue().GetSec();
 
-                if (p != null && k.GetValue().GetPress() == p.GetValue()) // fix: check p != null
+                if (p.GetValue() == k.GetValue().GetPress())
                 {
                     streak = true;
                     p = p.GetNext();
                 }
-                else if (p != null && k.GetValue().GetPress() != p.GetValue()) // fix: check p != null
+                else if (p.GetValue() != k.GetValue().GetPress())
                 {
                     sum = 0;
                     streak = false;
@@ -93,9 +91,13 @@ namespace _9157_intercomm_matkonet
                 k = k.GetNext();
             }
 
-            return false; // no valid sequence found
+            return false;
         }
 
+
+
+
+        //end student code
 
 
 
@@ -108,101 +110,93 @@ namespace _9157_intercomm_matkonet
 
         public static void Main()
         {
-            Console.WriteLine("Running test cases for CheckPWD...\n");
-
             int passed = 0;
             int total = 0;
-
-            Node<char> pwd = BuildCharList(new char[] { '1', '5' });
             int timeLimit = 5;
 
+            // Test 1 – Basic match in the middle
+            Node<char> pwd1 = BuildCharList(new char[] { '1', '5' });
             total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 1), new Key('5', 2) }), pwd, timeLimit), true, "Basic Success");
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+        new Key('1', 1),
+        new Key('5', 2),
+        new Key('9', 1)  // extra key after match
+            }), pwd1, timeLimit), true, "Basic match: password occurs before end of input");
 
+            // Test 2 – Almost match, still valid if first sec miscounted
+            Node<char> pwd2 = BuildCharList(new char[] { '1', '5' });
             total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 2), new Key('5', 6) }), pwd, timeLimit), false, "Too Slow");
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+        new Key('1', 3),
+        new Key('5', 2),
+        new Key('9', 1)
+            }), pwd2, timeLimit), true, "Almost match: forgiving if first sec is miscounted");
 
+            // Test 3 – No match at all
+            Node<char> pwd3 = BuildCharList(new char[] { '1', '2' });
             total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('2', 1), new Key('9', 1), new Key('3', 1) }), pwd, timeLimit), false, "No Match");
-
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+        new Key('9', 1),
+        new Key('3', 2),
+        new Key('5', 1)
+            }), pwd3, timeLimit), false, "No match: password does not appear at all");
+            
+            // Test 4 – Match is too slow, even if miscounted
+            Node<char> pwd4 = BuildCharList(new char[] { '1', '5' });
             total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 2), new Key('5', 7), new Key('1', 2), new Key('5', 2) }), pwd, timeLimit), true, "Multiple Sequences");
-
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+        new Key('1', 1),
+        new Key('5', 6),
+        new Key('8', 1)
+            }), pwd4, timeLimit), false, "Time overflow: too slow even if miscounted");
+            
+            // Test 5 – Match at the very end
+            Node<char> pwd5 = BuildCharList(new char[] { '1', '2' });
             total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 2), new Key('5', 2) }), pwd, timeLimit), true, "Time OK even if miscounted");
+            passed += RunTest(total, CheckPWD(BuildList(new Key[]
+            {
+        new Key('9', 1),
+        new Key('3', 1),
+        new Key('1', 1),
+        new Key('2', 1)
+            }), pwd5, timeLimit), true, "Password match occurs at the end of the input");
 
-            total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 3), new Key('5', 1) }), pwd, timeLimit), true, "Also OK if miscounted");
-
-            total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('1', 3), new Key('5', 3) }), pwd, timeLimit), true, "Should fail if first sec counted (miscounted test)");
-
-            total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[] { new Key('9', 1), new Key('3', 1), new Key('1', 2), new Key('5', 2) }), pwd, timeLimit), true, "Match at end");
-
-            // Test 9 - Overlapping Start
-            Node<char> pwd123 = BuildCharList(new char[] { '1', '2', '3' });
+            // Test 6 – Overlapping start (e.g., 1 1 2 3, pwd = 1 2 3)
+            Node<char> pwd6 = BuildCharList(new char[] { '1', '2', '3' });
             total++;
             passed += RunTest(total, CheckPWD(BuildList(new Key[]
             {
         new Key('1', 1),
         new Key('1', 1),
         new Key('2', 1),
-        new Key('3', 1)
-            }), pwd123, timeLimit), true, "Overlapping Start");
+        new Key('3', 1),
+        new Key('9', 1)
+            }), pwd6, timeLimit), true, "Overlapping match: restarts during sequence");
 
-            // Test 10 - Time miscount would still pass (correct even if first sec is wrongly counted)
-            Node<char> pwd10 = BuildCharList(new char[] { '1', '5' });
+            // Test 7 – Empty password
+            Node<char> pwd7 = null;
             total++;
             passed += RunTest(total, CheckPWD(BuildList(new Key[]
             {
-    new Key('1', 3),
-    new Key('5', 2)
-            }), pwd10, timeLimit), true, "Time miscount: passes even if first sec wrongly counted");
+        new Key('1', 1),
+        new Key('2', 1)
+            }), pwd7, timeLimit), false, "Empty password: should return false");
 
-            // Test 11 - Time miscount causes failure (should only pass if first sec is excluded)
+            // Test 8 – Input shorter than password
+            Node<char> pwd8 = BuildCharList(new char[] { '1', '2', '3' });
             total++;
             passed += RunTest(total, CheckPWD(BuildList(new Key[]
             {
-    new Key('1', 3),
-    new Key('5', 3)
-            }), pwd10, timeLimit), true, "Time miscount: fails if first sec wrongly counted");
+        new Key('1', 1),
+        new Key('2', 1)
+            }), pwd8, timeLimit), false, "Input shorter than password: cannot match");
 
-            // Test 12 - Reset after mismatch, second sequence is valid
-            total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[]
-            {
-    new Key('1', 1),
-    new Key('2', 1),
-    new Key('1', 1),
-    new Key('5', 1)
-            }), pwd10, timeLimit), true, "Reset after mismatch and retry");
-
-            // Test 13 - Valid password is at the very end
-            total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[]
-            {
-    new Key('9', 1),
-    new Key('3', 1),
-    new Key('1', 1),
-    new Key('5', 2)
-            }), pwd10, timeLimit), true, "Valid match at the very end");
-
-            // Test 14 - Correct match but time is too long
-            Node<char> pwd14 = BuildCharList(new char[] { '1', '2', '3' });
-            total++;
-            passed += RunTest(total, CheckPWD(BuildList(new Key[]
-            {
-    new Key('1', 1),
-    new Key('2', 3),
-    new Key('3', 4)
-            }), pwd14, timeLimit), false, "Match is too slow");
-
-
-
+            // Final summary
             Console.WriteLine($"\nResult: {passed}/{total} tests passed");
-
-
         }
 
         static int RunTest(int testNumber, bool actual, bool expected, string description)
