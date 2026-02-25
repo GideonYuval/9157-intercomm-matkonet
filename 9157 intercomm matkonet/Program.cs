@@ -27,9 +27,17 @@ namespace _9157_intercomm_matkonet
 
     public class Program
     {
+        //helper function - 
+        //function checks password pwd from node l, and checks if it meets time restriction
         public static bool CheckN(Node<Key> l, Node<char> pwd, int time)
         {
+            //need to subtract the time from previous press, as it's not relevant
+            //e.g. in the question, line 2, the press of "1" was 2 seconds after the "7", but this is irrelevant
             int t = -1 * l.GetValue().GetSec();
+            
+            //start comparing pwd to the nodes, continue till one is null
+            //if it's the pwd, that's fine - check the accumulated time
+            //if it's the keys, return false (password ended in the middle)
             while (l != null && pwd != null)
             {
                 if (l.GetValue().GetPress() != pwd.GetValue())
@@ -43,7 +51,9 @@ namespace _9157_intercomm_matkonet
             return false;
         }
 
-        static bool CheckPWD(Node<Key> l, Node<char> pwd, int time) //my version
+        //check password for each node using helper
+        //return true if there's a match
+        static bool CheckPWD(Node<Key> l, Node<char> pwd, int time) 
         {
             while (l != null)
             {
@@ -53,16 +63,9 @@ namespace _9157_intercomm_matkonet
             }
             return false;
         }
-
-
-
-
-
-
-
         //complexity - if n is length of input, m is length of pwd, then:
         //if length of m is arbitrary - O(n*m)
-        //if m has size limit, say 5, then O(n)
+        //if m has size limit, say 5, then O(n), when n is the key input length
 
 
         public static void Main()
