@@ -43,7 +43,7 @@ namespace _9157_intercomm_matkonet
             return false;
         }
 
-        static bool CheckPWD1(Node<Key> l, Node<char> pwd, int time) //my version
+        static bool CheckPWD(Node<Key> l, Node<char> pwd, int time) //my version
         {
             while (l != null)
             {
@@ -54,50 +54,7 @@ namespace _9157_intercomm_matkonet
             return false;
         }
 
-        //student code
 
-        static bool CheckPWD(Node<Key> k, Node<char> p, int t)
-        {
-            Node<char> head = p;
-            int sum = 0;
-            bool streak = false;
-
-            while (k != null)
-            {
-                if (p == null && sum <= t)
-                    return true;
-                else if (p == null && sum > t)
-                {
-                    sum = 0;
-                    streak = false;
-                    p = head;
-                }
-
-                if (streak)
-                    sum += k.GetValue().GetSec();
-
-                if (p.GetValue() == k.GetValue().GetPress())
-                {
-                    streak = true;
-                    p = p.GetNext();
-                }
-                else if (p.GetValue() != k.GetValue().GetPress())
-                {
-                    sum = 0;
-                    streak = false;
-                    p = head;
-                }
-
-                k = k.GetNext();
-            }
-
-            return false;
-        }
-
-
-
-
-        //end student code
 
 
 
